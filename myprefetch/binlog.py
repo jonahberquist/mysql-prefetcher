@@ -145,7 +145,7 @@ class Binlog(object):
                 struct.unpack("<IIBHH", event_data[0:hlen])
             db_offset = hlen + status_length
             db = event_data[db_offset:db_offset + db_len]
-            query = event_data[db_offset + db_len + 1:]
+            query = event_data[db_offset + db_len + 1:-4]
 
             return Event(cur_position, 'query', db, query, timestamp,
                          elapsed, self.insert_id, self.last_insert_id)
@@ -153,7 +153,7 @@ class Binlog(object):
         elif event_type in (STOP_EVENT, ROTATE_EVENT):
             return False
         elif event_type == INTVAR_EVENT:
-            (intvar_type, intvar_value) = struct.unpack("<BQ", event_data)
+            (intvar_type, intvar_value, intvar_checksum) = struct.unpack("<BQI", event_data)
             if intvar_type == 1:
                 self.last_insert_id = intvar_value
             elif intvar_type == 2:
